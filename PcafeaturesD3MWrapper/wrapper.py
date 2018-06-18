@@ -30,7 +30,7 @@ class Hyperparams(hyperparams.Hyperparams):
 class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
     metadata = metadata_base.PrimitiveMetadata({
         # Simply an UUID generated once and fixed forever. Generated using "uuid.uuid4()".
-        'id': "fc6bf33a-f3e0-3496-aa47-9a40289661bc",
+        'id': "04573880-d64f-4791-8932-52b7c3877639",
         'version': __version__,
         'name': "PCA Features",
         # Keywords do not have a controlled vocabulary. Authors can put here whatever they find suitable.
