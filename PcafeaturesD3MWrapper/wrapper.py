@@ -82,7 +82,6 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
         pass
         
     def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
-        p
         """
         Perform principal component analysis on all numeric data in the dataset
         and then use each original features contribution to the first principal
