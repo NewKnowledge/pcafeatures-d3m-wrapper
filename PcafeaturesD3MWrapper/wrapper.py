@@ -98,7 +98,7 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
             by their contribution to the first principal component, and scores in
             the second column.
         """
-        return PCAFeatures().rank_features(inputs = inputs)
+        return CallResult(PCAFeatures().rank_features(inputs = inputs))
 
 
 if __name__ == '__main__':
