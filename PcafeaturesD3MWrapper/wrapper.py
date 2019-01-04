@@ -20,7 +20,7 @@ Outputs = container.pandas.DataFrame
 class Hyperparams(hyperparams.Hyperparams):
     pass
 
-class pcafeatures(PrimitiveBase[Inputs, Outputs, Hyperparams]):
+class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     metadata = metadata_base.PrimitiveMetadata({
         # Simply an UUID generated once and fixed forever. Generated using "uuid.uuid4()".
         'id': "04573880-d64f-4791-8932-52b7c3877639",
