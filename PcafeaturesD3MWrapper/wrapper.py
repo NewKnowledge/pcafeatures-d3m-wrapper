@@ -1,17 +1,15 @@
 import os.path
-import numpy as np
 import pandas
-import pickle
-import requests
-import ast
-import typing
 
 from punk.feature_selection import PCAFeatures
 from d3m.primitive_interfaces.transformer import TransformerPrimitiveBase
 from d3m.primitive_interfaces.base import CallResult
 
 from d3m import container, utils
-from d3m.metadata import hyperparams, base as metadata_base, params
+from d3m.container import DataFrame as d3m_DataFrame
+from d3m.metadata import hyperparams, base as metadata_base
+
+from common_primitives import utils as utils_cp
 
 __author__ = 'Distil'
 __version__ = '3.0.1'
@@ -78,8 +76,23 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Hyperparams]):
             by their contribution to the first principal component, and scores in
             the second column.
         """
-        print(PCAFeatures().rank_features(inputs = inputs))
-        return CallResult(PCAFeatures().rank_features(inputs = inputs))
+
+        # add metadata to output data frame
+        pca_df = d3m_dataFrame(PCAFeatures().rank_features(inputs = inputs))
+        # first column ('features')
+        col_dict = dict(pca_df.metadata.query((metadata_base.All_ELEMENTS, 0)))
+        col_dict['structural_type'] = type("1")
+        col_dict['name'] = 'features'
+        col_dict['semantic_types'] = ('http://schema.org/Integer', 'https://metadata.datadrivendiscovery.org/types/Attribute')
+        pca_df.metadata = pca_df.metadata.update((metadata_base.All_ELEMENTS, 0), col_dict)
+        # second column ('scores')
+        col_dict = dict(pca_df.metadata.query((metadata_base.All_ELEMENTS, 1)))
+        col_dict['structural_type'] = type("1.0")
+        col_dict['name'] = 'scores'
+        col_dict['semantic_types'] = ('http://schema.org/Float', 'https://metadata.datadrivendiscovery.org/types/Attribute')
+        pca_df.metadata = pca_df.metadata.update((metadata_base.All_ELEMENTS, 1), col_dict)
+
+        return CallResult(pca_df)
 
 
 if __name__ == '__main__':
