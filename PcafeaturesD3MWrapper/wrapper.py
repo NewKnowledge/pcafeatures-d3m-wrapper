@@ -100,6 +100,6 @@ if __name__ == '__main__':
     # make sure to read dataframe as string!
     # frame = pandas.read_csv("https://query.data.world/s/10k6mmjmeeu0xlw5vt6ajry05",dtype='str')
     #frame = pandas.read_csv("https://s3.amazonaws.com/d3m-data/merged_o_data/o_4550_merged.csv",dtype='str')
-    frame = pandas.read_csv("/data/home/jgleason/D3m/datasets/seed_datasets_current/196_autoMpg/196_autoMpg_dataset/tables/learningData.csv", dtype='str')
+    frame = pandas.read_csv("/home/learningData.csv", dtype='str')
     result = client.produce(inputs = frame)
     print(result)
