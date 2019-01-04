@@ -80,17 +80,17 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         # add metadata to output data frame
         pca_df = d3m_DataFrame(PCAFeatures().rank_features(inputs = inputs))
         # first column ('features')
-        col_dict = dict(pca_df.metadata.query((metadata_base.All_ELEMENTS, 0)))
+        col_dict = dict(pca_df.metadata.query((metadata_base.ALL_ELEMENTS, 0)))
         col_dict['structural_type'] = type("1")
         col_dict['name'] = 'features'
         col_dict['semantic_types'] = ('http://schema.org/Integer', 'https://metadata.datadrivendiscovery.org/types/Attribute')
-        pca_df.metadata = pca_df.metadata.update((metadata_base.All_ELEMENTS, 0), col_dict)
+        pca_df.metadata = pca_df.metadata.update((metadata_base.ALL_ELEMENTS, 0), col_dict)
         # second column ('scores')
-        col_dict = dict(pca_df.metadata.query((metadata_base.All_ELEMENTS, 1)))
+        col_dict = dict(pca_df.metadata.query((metadata_base.ALL_ELEMENTS, 1)))
         col_dict['structural_type'] = type("1.0")
         col_dict['name'] = 'scores'
         col_dict['semantic_types'] = ('http://schema.org/Float', 'https://metadata.datadrivendiscovery.org/types/Attribute')
-        pca_df.metadata = pca_df.metadata.update((metadata_base.All_ELEMENTS, 1), col_dict)
+        pca_df.metadata = pca_df.metadata.update((metadata_base.ALL_ELEMENTS, 1), col_dict)
 
         return CallResult(pca_df)
 
