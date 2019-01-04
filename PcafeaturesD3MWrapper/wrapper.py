@@ -5,29 +5,24 @@ import pickle
 import requests
 import ast
 import typing
-from json import JSONDecoder
-from typing import List
 
 from punk.feature_selection import PCAFeatures
-from d3m.primitive_interfaces.base import PrimitiveBase, CallResult
+from d3m.primitive_interfaces.transformer import TransformerPrimitiveBase
+from d3m.primitive_interfaces.base import CallResult
 
 from d3m import container, utils
 from d3m.metadata import hyperparams, base as metadata_base, params
 
 __author__ = 'Distil'
-__version__ = '3.0.0'
+__version__ = '3.0.1'
 
 Inputs = container.pandas.DataFrame
 Outputs = container.pandas.DataFrame
 
-class Params(params.Params):
-    pass
-
-
 class Hyperparams(hyperparams.Hyperparams):
     pass
 
-class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
+class pcafeatures(PrimitiveBase[Inputs, Outputs, Hyperparams]):
     metadata = metadata_base.PrimitiveMetadata({
         # Simply an UUID generated once and fixed forever. Generated using "uuid.uuid4()".
         'id': "04573880-d64f-4791-8932-52b7c3877639",
@@ -65,21 +60,6 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
     
     def __init__(self, *, hyperparams: Hyperparams, random_seed: int = 0)-> None:
         super().__init__(hyperparams=hyperparams, random_seed=random_seed)
-                
-        self._decoder = JSONDecoder()
-        self._params = {}
-
-    def fit(self) -> None:
-        pass
-    
-    def get_params(self) -> Params:
-        return self._params
-
-    def set_params(self, *, params: Params) -> None:
-        self.params = params
-
-    def set_training_data(self, *, inputs: Inputs, outputs: Outputs) -> None:
-        pass
         
     def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
         """
@@ -98,6 +78,7 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
             by their contribution to the first principal component, and scores in
             the second column.
         """
+        print(PCAFeatures().rank_features(inputs = inputs))
         return CallResult(PCAFeatures().rank_features(inputs = inputs))
 
 
