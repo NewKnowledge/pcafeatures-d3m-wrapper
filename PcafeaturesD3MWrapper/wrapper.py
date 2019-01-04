@@ -78,7 +78,7 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         """
 
         # add metadata to output data frame
-        pca_df = d3m_dataFrame(PCAFeatures().rank_features(inputs = inputs))
+        pca_df = d3m_DataFrame(PCAFeatures().rank_features(inputs = inputs))
         # first column ('features')
         col_dict = dict(pca_df.metadata.query((metadata_base.All_ELEMENTS, 0)))
         col_dict['structural_type'] = type("1")
