@@ -8,7 +8,7 @@ from d3m.primitive_interfaces.base import CallResult
 from d3m import container, utils
 from d3m.container import DataFrame as d3m_DataFrame
 from d3m.metadata import hyperparams, base as metadata_base
-
+from d3m.primitives.datasets import DatasetToDataFrame
 from common_primitives import utils as utils_cp
 
 __author__ = 'Distil'
@@ -96,10 +96,14 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
 
 
 if __name__ == '__main__':
+    # LOAD DATA AND PREPROCESSING
+    input_dataset = container.Dataset.load('file:///data/home/jgleason/D3m/datasets/seed_datasets_current/196_autoMpg/196_autoMpg_dataset/datasetDoc.json') 
+    ds2df_client = DatasetToDataFrame(hyperparams={"dataframe_resource":"0"})
+    df = ds2df_client.produce(inputs = input_dataset)   
     client = pcafeatures(hyperparams={})
     # make sure to read dataframe as string!
     # frame = pandas.read_csv("https://query.data.world/s/10k6mmjmeeu0xlw5vt6ajry05",dtype='str')
     #frame = pandas.read_csv("https://s3.amazonaws.com/d3m-data/merged_o_data/o_4550_merged.csv",dtype='str')
-    frame = pandas.read_csv("/home/learningData.csv", dtype='str')
-    result = client.produce(inputs = frame)
-    print(result)
+    result = client.produce(inputs = df.value)
+    bestFeatures = [int(row[1]) for row in result.value.itertuples() if float(row[2]) > 0.1]
+    print(bestFeatures)
