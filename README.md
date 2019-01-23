@@ -1,5 +1,7 @@
 # Pcafeatures D3M Wrapper
-Wrapper of the Punk feature ranker (the base library can be found here: https://github.com/NewKnowledge/punk) into D3M infrastructure. All code is written in Python 3.5 and must be run in 3.5 or greater. 
+Wrapper of the Punk feature ranker into D3M infrastructure. All code is written in Python 3.5 and must be run in 3.5 or greater.
+
+The base library can be found here: https://github.com/NewKnowledge/punk.
 
 ## Output
 The output is a DataFrame with two columns. The first column is an ordered list of all original features, ordered by their contribution to the first principal component. The second column is the feature's contribution to the first principal component, which serves as a proxy for the 'score' of that feature. 
