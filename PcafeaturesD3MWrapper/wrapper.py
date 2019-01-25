@@ -68,6 +68,8 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         
     def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
         """
+        Parameters
+        -------
         inputs : Input pandas frame
 
         Returns
