@@ -12,7 +12,7 @@ from common_primitives import utils as utils_cp, dataset_to_dataframe as Dataset
 
 __author__ = 'Distil'
 __version__ = '3.0.1'
-__contact__ = 'jeffrey.gleason@newknowledge.io'
+__contact__ = 'mailto:jeffrey.gleason@newknowledge.io'
 
 Inputs = container.pandas.DataFrame
 Outputs = container.pandas.DataFrame
