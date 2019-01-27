@@ -21,6 +21,13 @@ class Hyperparams(hyperparams.Hyperparams):
     pass
 
 class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+    """
+        Perform principal component analysis on all numeric data in the dataset
+        and then use each original features contribution to the first principal
+        component as a proxy for the 'score' of that feature. Returns a dataframe
+        containing an ordered list of all original features as well as their 
+        contribution to the first principal component.
+    """
     metadata = metadata_base.PrimitiveMetadata({
         # Simply an UUID generated once and fixed forever. Generated using "uuid.uuid4()".
         'id': "04573880-d64f-4791-8932-52b7c3877639",
@@ -61,13 +68,8 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         
     def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
         """
-        Perform principal component analysis on all numeric data in the dataset
-        and then use each original features contribution to the first principal
-        component as a proxy for the 'score' of that feature. Returns a dataframe
-        containing an ordered list of all original features as well as their 
-        contribution to the first principal component.
         Parameters
-        ----------
+        -------
         inputs : Input pandas frame
 
         Returns
