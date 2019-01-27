@@ -11,7 +11,7 @@ setup(name='PcafeaturesD3MWrapper',
     ],
     entry_points = {
         'd3m.primitives': [
-            'feature_selection.distil.Pcafeatures = PcafeaturesD3MWrapper:pcafeatures'
+            'feature_selection.pca_features.Pcafeatures = PcafeaturesD3MWrapper:pcafeatures'
         ],
     },
 )
