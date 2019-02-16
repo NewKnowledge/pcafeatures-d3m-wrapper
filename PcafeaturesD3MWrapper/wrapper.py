@@ -117,7 +117,7 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > 0.0]
         from d3m.primitives.data_transformation.extract_columns import DataFrameCommon as ExtractColumns
         extract_client = ExtractColumns(hyperparams={"columns":bestFeatures})
-        result=extract_client.produce(inputs=df.value)
+        result=extract_client.produce(inputs=inputs.value)
         
 
         return result
