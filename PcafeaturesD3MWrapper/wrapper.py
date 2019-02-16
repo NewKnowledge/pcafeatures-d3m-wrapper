@@ -114,10 +114,20 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         pca_df = PCAFeatures().rank_features(inputs = inputs)
         # drop all columns below some default threshold value
         # threshold is 0.0, i.e., any useful features should not be dropped
-        bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > -0.01]
+        bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > 0.0]
         from d3m.primitives.data_transformation.extract_columns import DataFrameCommon as ExtractColumns
         extract_client = ExtractColumns(hyperparams={"columns":bestFeatures})
         result=extract_client.produce(inputs=inputs)
+
+        # some debug info
+        print("DEBUG::pca_df ->")
+        print(pca_df)
+
+        import json
+        with open('pca_debug_file.txt','a') as file:
+            file.write("DEBUG::self.volumes ->\n")
+            file.write(json.dumps(pca_df))
+            file.write("---------------\n")
         
 
         return result
