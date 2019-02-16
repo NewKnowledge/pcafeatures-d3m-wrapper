@@ -67,7 +67,7 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     def __init__(self, *, hyperparams: Hyperparams, random_seed: int = 0)-> None:
         super().__init__(hyperparams=hyperparams, random_seed=random_seed)
         
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
+    def produce_metafeatures(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
         """
         Parameters
         -------
@@ -96,6 +96,31 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         pca_df.metadata = pca_df.metadata.update((metadata_base.ALL_ELEMENTS, 1), col_dict)
 
         return CallResult(pca_df)
+
+    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
+        """
+        Parameters
+        -------
+        inputs : Input pandas frame
+
+        Returns
+        -------
+        Outputs : pandas frame with list of original features in first column, ordered
+            by their contribution to the first principal component, and scores in
+            the second column.
+        """
+
+        # generate feature ranking
+        pca_df = PCAFeatures().rank_features(inputs = inputs)
+        # drop all columns below some default threshold value
+        # threshold is 0.0, i.e., any useful features should not be dropped
+        bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > 0.0]
+        from d3m.primitives.data_transformation.extract_columns import DataFrameCommon as ExtractColumns
+        extract_client = ExtractColumns(hyperparams={"columns":bestFeatures})
+        result=extract_client.produce(inputs=df.value)
+        
+
+        return result
 
 
 if __name__ == '__main__':
