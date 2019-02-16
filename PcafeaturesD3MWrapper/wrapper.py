@@ -125,8 +125,10 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
 
         import json
         with open('pca_debug_file.txt','a') as file:
+            file.write("DEBUG::bestFeatures ->\n")
+            file.write(json.dumps(bestFeatures))
             file.write("DEBUG::pca_df ->\n")
-            file.write(json.dumps(pca_df))
+            file.write(json.dumpspca_df.values)
             file.write("---------------\n")
         
 
