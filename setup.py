@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='PcafeaturesD3MWrapper',
-    version='3.0.1',
+    version='3.0.2',
     description='A wrapper for running the punk pcafeatures functions in the d3m environment.',
     packages=['PcafeaturesD3MWrapper'],
     install_requires=["numpy==1.15.4",
