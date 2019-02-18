@@ -115,7 +115,7 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         # drop all columns below some default threshold value
         # threshold is 0.0, i.e., any useful features should not be dropped
         bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > 0.01]
-        bestFeatures.append(int(30))
+        bestFeatures.append(int(29))
 
         import json
         with open('pca_debug_file.txt','a') as file:
