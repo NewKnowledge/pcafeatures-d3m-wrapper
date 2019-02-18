@@ -112,26 +112,16 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
 
         # generate feature ranking
         pca_df = PCAFeatures().rank_features(inputs = inputs)
-        # drop all columns below some default threshold value
-        # threshold is 0.0, i.e., any useful features should not be dropped
-        bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > 0.01]
-        bestFeatures.append(int(29))
-
-        import json
-        with open('pca_debug_file.txt','a') as file:
-            file.write("DEBUG::bestFeatures ->\n")
-            file.write(json.dumps(bestFeatures))
-            file.write("DEBUG:: ->\n")
-            file.write(json.dumps(inputs.shape))
-            file.write("---------------\n")
-
         
+        # threshold is 0.0 for now, i.e., any useful features should not be dropped, should be tunable HP in the end
+        bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > 0.000]
+        # add suggestedTarget, assuming it is last column - will need something more rigorous eventually
+        bestFeatures.append(inputs.shape[1]-1)
+
+        # drop all columns below threshold value 
         from d3m.primitives.data_transformation.extract_columns import DataFrameCommon as ExtractColumns
         extract_client = ExtractColumns(hyperparams={"columns":bestFeatures})
-        result=extract_client.produce(inputs=inputs)
-
-        
-        
+        result = extract_client.produce(inputs=inputs)
 
         return result
 
@@ -146,5 +136,4 @@ if __name__ == '__main__':
     # frame = pandas.read_csv("https://query.data.world/s/10k6mmjmeeu0xlw5vt6ajry05",dtype='str')
     #frame = pandas.read_csv("https://s3.amazonaws.com/d3m-data/merged_o_data/o_4550_merged.csv",dtype='str')
     result = client.produce(inputs = df.value)
-    bestFeatures = [int(row[1]) for row in result.value.itertuples() if float(row[2]) > 0.1]
-    print(bestFeatures)
+    print(result.value)
