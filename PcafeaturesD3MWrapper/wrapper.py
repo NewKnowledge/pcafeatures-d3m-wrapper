@@ -128,12 +128,10 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
 
 if __name__ == '__main__':
     # LOAD DATA AND PREPROCESSING
-    input_dataset = container.Dataset.load('file:///data/home/jgleason/D3m/datasets/seed_datasets_current/196_autoMpg/196_autoMpg_dataset/datasetDoc.json') 
-    ds2df_client = DatasetToDataFrame.DatasetToDataFramePrimitive(hyperparams={"dataframe_resource":"learningData"})
-    df = ds2df_client.produce(inputs = input_dataset)   
-    client = pcafeatures(hyperparams={})
-    # make sure to read dataframe as string!
-    # frame = pandas.read_csv("https://query.data.world/s/10k6mmjmeeu0xlw5vt6ajry05",dtype='str')
-    #frame = pandas.read_csv("https://s3.amazonaws.com/d3m-data/merged_o_data/o_4550_merged.csv",dtype='str')
+    input_dataset = container.Dataset.load('file:///home//geocodingdata/data/38_sick/38_sick_dataset/datasetDoc.json')
+    ds2df_client = DatasetToDataFrame(hyperparams={"dataframe_resource":"0"})
+    df = ds2df_client.produce(inputs=input_dataset)
+    from d3m.primitives.feature_selection.pca_features import Pcafeatures
+    client = Pcafeatures(hyperparams={})
     result = client.produce(inputs = df.value)
     print(result.value)
