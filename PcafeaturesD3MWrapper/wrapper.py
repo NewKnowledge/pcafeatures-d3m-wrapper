@@ -11,7 +11,7 @@ from d3m.metadata import hyperparams, base as metadata_base
 from common_primitives import utils as utils_cp, dataset_to_dataframe as DatasetToDataFrame
 
 __author__ = 'Distil'
-__version__ = '3.0.1'
+__version__ = '3.0.2'
 __contact__ = 'mailto:jeffrey.gleason@newknowledge.io'
 
 Inputs = container.pandas.DataFrame
@@ -67,7 +67,7 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     def __init__(self, *, hyperparams: Hyperparams, random_seed: int = 0)-> None:
         super().__init__(hyperparams=hyperparams, random_seed=random_seed)
         
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
+    def produce_metafeatures(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
         """
         Parameters
         -------
@@ -97,16 +97,41 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
 
         return CallResult(pca_df)
 
+    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
+        """
+        Parameters
+        -------
+        inputs : Input pandas frame
+
+        Returns
+        -------
+        Outputs : pandas frame with list of original features in first column, ordered
+            by their contribution to the first principal component, and scores in
+            the second column.
+        """
+
+        # generate feature ranking
+        pca_df = PCAFeatures().rank_features(inputs = inputs)
+        
+        # threshold is 0.0 for now, i.e., any useful features should not be dropped, should be tunable HP in the end
+        bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > 0.000]
+        # add suggestedTarget, assuming it is last column - will need something more rigorous eventually
+        bestFeatures.append(inputs.shape[1]-1)
+
+        # drop all columns below threshold value 
+        from d3m.primitives.data_transformation.extract_columns import DataFrameCommon as ExtractColumns
+        extract_client = ExtractColumns(hyperparams={"columns":bestFeatures})
+        result = extract_client.produce(inputs=inputs)
+
+        return result
+
 
 if __name__ == '__main__':
     # LOAD DATA AND PREPROCESSING
-    input_dataset = container.Dataset.load('file:///data/home/jgleason/D3m/datasets/seed_datasets_current/196_autoMpg/196_autoMpg_dataset/datasetDoc.json') 
-    ds2df_client = DatasetToDataFrame.DatasetToDataFramePrimitive(hyperparams={"dataframe_resource":"learningData"})
-    df = ds2df_client.produce(inputs = input_dataset)   
-    client = pcafeatures(hyperparams={})
-    # make sure to read dataframe as string!
-    # frame = pandas.read_csv("https://query.data.world/s/10k6mmjmeeu0xlw5vt6ajry05",dtype='str')
-    #frame = pandas.read_csv("https://s3.amazonaws.com/d3m-data/merged_o_data/o_4550_merged.csv",dtype='str')
+    input_dataset = container.Dataset.load('file:///home//geocodingdata/data/38_sick/38_sick_dataset/datasetDoc.json')
+    ds2df_client = DatasetToDataFrame(hyperparams={"dataframe_resource":"0"})
+    df = ds2df_client.produce(inputs=input_dataset)
+    from d3m.primitives.feature_selection.pca_features import Pcafeatures
+    client = Pcafeatures(hyperparams={})
     result = client.produce(inputs = df.value)
-    bestFeatures = [int(row[1]) for row in result.value.itertuples() if float(row[2]) > 0.1]
-    print(bestFeatures)
+    print(result.value)
