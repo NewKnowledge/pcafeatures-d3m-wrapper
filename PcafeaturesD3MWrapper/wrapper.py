@@ -4,6 +4,8 @@ import pandas
 from punk.feature_selection import PCAFeatures
 from d3m.primitive_interfaces.transformer import TransformerPrimitiveBase
 from d3m.primitive_interfaces.base import CallResult
+from d3m.primitives.data_transformation.extract_columns import DataFrameCommon as ExtractColumns
+
 
 from d3m import container, utils
 from d3m.container import DataFrame as d3m_DataFrame
@@ -12,13 +14,16 @@ from common_primitives import utils as utils_cp, dataset_to_dataframe as Dataset
 
 __author__ = 'Distil'
 __version__ = '3.0.2'
-__contact__ = 'mailto:jeffrey.gleason@newknowledge.io'
+__contact__ = 'mailto:nklabs@newknowledge.com'
 
 Inputs = container.pandas.DataFrame
 Outputs = container.pandas.DataFrame
 
 class Hyperparams(hyperparams.Hyperparams):
-    pass
+    threshold = hyperparams.Uniform(lower = 0.0, upper = 1.0, default = 0.0, 
+        upper_inclusive = False, semantic_types = [
+       'https://metadata.datadrivendiscovery.org/types/ControlParameter'], 
+       description = 'pca score threshold for feature selection')
 
 class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
@@ -112,17 +117,17 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
 
         # generate feature ranking
         pca_df = PCAFeatures().rank_features(inputs = inputs)
-        
-        # threshold is 0.0 for now, i.e., any useful features should not be dropped, should be tunable HP in the end
-        bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > 0.000]
-        # add suggestedTarget, assuming it is last column - will need something more rigorous eventually
-        bestFeatures.append(inputs.shape[1]-1)
+
+        # take best features with threshold
+        bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > self.hyperparams['threshold']]
+
+        # add suggested targets to dataset containing best features
+        indices = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/SuggestedTarget')
+        bestFeatures.append(indices)
 
         # drop all columns below threshold value 
-        from d3m.primitives.data_transformation.extract_columns import DataFrameCommon as ExtractColumns
         extract_client = ExtractColumns(hyperparams={"columns":bestFeatures})
         result = extract_client.produce(inputs=inputs)
-
         return result
 
 
