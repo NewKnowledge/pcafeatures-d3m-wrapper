@@ -24,6 +24,9 @@ class Hyperparams(hyperparams.Hyperparams):
         upper_inclusive = False, semantic_types = [
        'https://metadata.datadrivendiscovery.org/types/ControlParameter'], 
        description = 'pca score threshold for feature selection')
+    only_numeric_cols = hyperparams.UniformBool(default = True, semantic_types = [
+       'https://metadata.datadrivendiscovery.org/types/ControlParameter'],
+       description="consider only numeric columns for feature selection")
 
 class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
@@ -115,16 +118,21 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
             the second column.
         """
 
-        # extract numeric columns and suggested target
-        inputs_float = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Float')
-        inputs_integer = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Integer')
         inputs_primary_key = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/PrimaryKey')
         inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/SuggestedTarget')
-        inputs_numeric = [*inputs_float, *inputs_integer]
-        inputs_numeric = [x for x in inputs_numeric if x not in inputs_primary_key]
+
+        # extract numeric columns and suggested target
+        if self.hyperparams['only_numeric_cols']:
+            inputs_float = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Float')
+            inputs_integer = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Integer')
+            inputs_numeric = [*inputs_float, *inputs_integer]
+            inputs = inputs.iloc[:, inputs_numeric]
+        
+        # remove primary key and targets from feature selection
+        inputs.drop(inputs_primary_key + inputs_target, axis=1, inplace=True)
 
         # generate feature ranking
-        pca_df = PCAFeatures().rank_features(inputs = inputs.iloc[:, inputs_numeric])
+        pca_df = PCAFeatures().rank_features(inputs = inputs)
 
         # take best features with threshold
         bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > self.hyperparams['threshold']]
