@@ -117,9 +117,10 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
             by their contribution to the first principal component, and scores in
             the second column.
         """
-
+        # remove primary key and targets from feature selection
         inputs_primary_key = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/PrimaryKey')
         inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/SuggestedTarget')
+        inputs.drop(inputs_primary_key + inputs_target, axis=1, inplace=True)
 
         # extract numeric columns and suggested target
         if self.hyperparams['only_numeric_cols']:
@@ -127,10 +128,7 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
             inputs_integer = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Integer')
             inputs_numeric = [*inputs_float, *inputs_integer]
             inputs = inputs.iloc[:, inputs_numeric]
-        
-        # remove primary key and targets from feature selection
-        inputs.drop(inputs_primary_key + inputs_target, axis=1, inplace=True)
-
+            
         # generate feature ranking
         pca_df = PCAFeatures().rank_features(inputs = inputs)
 
