@@ -4,6 +4,8 @@ import pandas
 from punk.feature_selection import PCAFeatures
 from d3m.primitive_interfaces.transformer import TransformerPrimitiveBase
 from d3m.primitive_interfaces.base import CallResult
+from d3m.primitives.data_transformation.extract_columns import DataFrameCommon as ExtractColumns
+
 
 from d3m import container, utils
 from d3m.container import DataFrame as d3m_DataFrame
@@ -11,14 +13,20 @@ from d3m.metadata import hyperparams, base as metadata_base
 from common_primitives import utils as utils_cp, dataset_to_dataframe as DatasetToDataFrame
 
 __author__ = 'Distil'
-__version__ = '3.0.1'
-__contact__ = 'mailto:jeffrey.gleason@newknowledge.io'
+__version__ = '3.0.2'
+__contact__ = 'mailto:nklabs@newknowledge.com'
 
 Inputs = container.pandas.DataFrame
 Outputs = container.pandas.DataFrame
 
 class Hyperparams(hyperparams.Hyperparams):
-    pass
+    threshold = hyperparams.Uniform(lower = 0.0, upper = 1.0, default = 0.0, 
+        upper_inclusive = False, semantic_types = [
+       'https://metadata.datadrivendiscovery.org/types/ControlParameter'], 
+       description = 'pca score threshold for feature selection')
+    only_numeric_cols = hyperparams.UniformBool(default = True, semantic_types = [
+       'https://metadata.datadrivendiscovery.org/types/ControlParameter'],
+       description="consider only numeric columns for feature selection")
 
 class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
@@ -67,7 +75,7 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     def __init__(self, *, hyperparams: Hyperparams, random_seed: int = 0)-> None:
         super().__init__(hyperparams=hyperparams, random_seed=random_seed)
         
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
+    def produce_metafeatures(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
         """
         Parameters
         -------
@@ -97,16 +105,53 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
 
         return CallResult(pca_df)
 
+    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
+        """
+        Parameters
+        -------
+        inputs : Input pandas frame
+
+        Returns
+        -------
+        Outputs : pandas frame with list of original features in first column, ordered
+            by their contribution to the first principal component, and scores in
+            the second column.
+        """
+        # remove primary key and targets from feature selection
+        inputs_primary_key = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/PrimaryKey')
+        inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/SuggestedTarget')
+
+        # extract numeric columns and suggested target
+        if self.hyperparams['only_numeric_cols']:
+            inputs_float = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Float')
+            inputs_integer = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Integer')
+            inputs_numeric = [*inputs_float, *inputs_integer]
+            inputs_cols = [x for x in inputs_numeric if x not in inputs_primary_key]
+        else:
+            inputs_cols = [x for x in inputs if x not in inputs_primary_key]
+
+        # generate feature ranking
+        pca_df = PCAFeatures().rank_features(inputs = inputs.iloc[:, inputs_cols])
+
+        # take best features with threshold
+        bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > self.hyperparams['threshold']]
+
+        # add suggested targets to dataset containing best features
+        bestFeatures = [inputs_cols[bf] for bf in bestFeatures]
+        bestFeatures += inputs_target
+
+        # drop all columns below threshold value 
+        extract_client = ExtractColumns(hyperparams={"columns":bestFeatures})
+        result = extract_client.produce(inputs=inputs)
+        return result
+
 
 if __name__ == '__main__':
     # LOAD DATA AND PREPROCESSING
-    input_dataset = container.Dataset.load('file:///data/home/jgleason/D3m/datasets/seed_datasets_current/196_autoMpg/196_autoMpg_dataset/datasetDoc.json') 
+    input_dataset = container.Dataset.load('file:///datasets/seed_datasets_current/38_sick/38_sick_dataset/datasetDoc.json')
     ds2df_client = DatasetToDataFrame.DatasetToDataFramePrimitive(hyperparams={"dataframe_resource":"learningData"})
-    df = ds2df_client.produce(inputs = input_dataset)   
-    client = pcafeatures(hyperparams={})
-    # make sure to read dataframe as string!
-    # frame = pandas.read_csv("https://query.data.world/s/10k6mmjmeeu0xlw5vt6ajry05",dtype='str')
-    #frame = pandas.read_csv("https://s3.amazonaws.com/d3m-data/merged_o_data/o_4550_merged.csv",dtype='str')
-    result = client.produce(inputs = df.value)
-    bestFeatures = [int(row[1]) for row in result.value.itertuples() if float(row[2]) > 0.1]
-    print(bestFeatures)
+    df = d3m_DataFrame(ds2df_client.produce(inputs=input_dataset).value)
+    hyperparams_class = pcafeatures.metadata.query()['primitive_code']['class_type_arguments']['Hyperparams']
+    client = pcafeatures(hyperparams=hyperparams_class.defaults())
+    result = client.produce(inputs = df)
+    print(result.value)
