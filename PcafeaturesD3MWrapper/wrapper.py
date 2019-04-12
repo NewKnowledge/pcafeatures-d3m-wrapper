@@ -115,15 +115,22 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
             the second column.
         """
 
+        # extract numeric columns and suggested target
+        inputs_float = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Float')
+        inputs_integer = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Integer')
+        inputs_primary_key = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/PrimaryKey')
+        inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/SuggestedTarget')
+        inputs_numeric = [*inputs_float, *inputs_integer]
+        inputs_numeric = [x for x in inputs_numeric if x not in inputs_primary_key]
+
         # generate feature ranking
-        pca_df = PCAFeatures().rank_features(inputs = inputs)
+        pca_df = PCAFeatures().rank_features(inputs = inputs.iloc[:, inputs_numeric])
 
         # take best features with threshold
         bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > self.hyperparams['threshold']]
 
         # add suggested targets to dataset containing best features
-        indices = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/SuggestedTarget')
-        bestFeatures.append(indices)
+        bestFeatures += inputs_target
 
         # drop all columns below threshold value 
         extract_client = ExtractColumns(hyperparams={"columns":bestFeatures})
@@ -133,10 +140,11 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
 
 if __name__ == '__main__':
     # LOAD DATA AND PREPROCESSING
-    input_dataset = container.Dataset.load('file:///home//geocodingdata/data/38_sick/38_sick_dataset/datasetDoc.json')
-    ds2df_client = DatasetToDataFrame(hyperparams={"dataframe_resource":"0"})
-    df = ds2df_client.produce(inputs=input_dataset)
+    input_dataset = container.Dataset.load('file:///datasets/seed_datasets_current/38_sick/38_sick_dataset/datasetDoc.json')
+    ds2df_client = DatasetToDataFrame.DatasetToDataFramePrimitive(hyperparams={"dataframe_resource":"learningData"})
+    df = d3m_DataFrame(ds2df_client.produce(inputs=input_dataset).value)
     from d3m.primitives.feature_selection.pca_features import Pcafeatures
-    client = Pcafeatures(hyperparams={})
-    result = client.produce(inputs = df.value)
+    hyperparams_class = Pcafeatures.metadata.query()['primitive_code']['class_type_arguments']['Hyperparams']
+    client = Pcafeatures(hyperparams=hyperparams_class.defaults())
+    result = client.produce(inputs = df)
     print(result.value)
