@@ -130,6 +130,7 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > self.hyperparams['threshold']]
 
         # add suggested targets to dataset containing best features
+        bestFeatures = [inputs_numeric[bf] for bf in bestFeatures]
         bestFeatures += inputs_target
 
         # drop all columns below threshold value 
@@ -143,8 +144,7 @@ if __name__ == '__main__':
     input_dataset = container.Dataset.load('file:///datasets/seed_datasets_current/38_sick/38_sick_dataset/datasetDoc.json')
     ds2df_client = DatasetToDataFrame.DatasetToDataFramePrimitive(hyperparams={"dataframe_resource":"learningData"})
     df = d3m_DataFrame(ds2df_client.produce(inputs=input_dataset).value)
-    from d3m.primitives.feature_selection.pca_features import Pcafeatures
-    hyperparams_class = Pcafeatures.metadata.query()['primitive_code']['class_type_arguments']['Hyperparams']
-    client = Pcafeatures(hyperparams=hyperparams_class.defaults())
+    hyperparams_class = pcafeatures.metadata.query()['primitive_code']['class_type_arguments']['Hyperparams']
+    client = pcafeatures(hyperparams=hyperparams_class.defaults())
     result = client.produce(inputs = df)
     print(result.value)
