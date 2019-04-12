@@ -120,24 +120,24 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         # remove primary key and targets from feature selection
         inputs_primary_key = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/PrimaryKey')
         inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/SuggestedTarget')
-        names = [list(inputs)[idx] for idx in inputs_primary_key]
-        inputs.drop(columns = names, inplace=True)
 
         # extract numeric columns and suggested target
         if self.hyperparams['only_numeric_cols']:
             inputs_float = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Float')
             inputs_integer = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Integer')
             inputs_numeric = [*inputs_float, *inputs_integer]
-            inputs = inputs.iloc[:, inputs_numeric]
+            inputs_cols = [x for x in inputs_numeric if x not in inputs_primary_key]
+        else:
+            inputs_cols = [x for x in inputs if x not in inputs_primary_key]
 
         # generate feature ranking
-        pca_df = PCAFeatures().rank_features(inputs = inputs)
+        pca_df = PCAFeatures().rank_features(inputs = inputs.iloc[:, inputs_cols])
 
         # take best features with threshold
         bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > self.hyperparams['threshold']]
 
         # add suggested targets to dataset containing best features
-        bestFeatures = [inputs_numeric[bf] for bf in bestFeatures]
+        bestFeatures = [inputs_cols[bf] for bf in bestFeatures]
         bestFeatures += inputs_target
 
         # drop all columns below threshold value 
