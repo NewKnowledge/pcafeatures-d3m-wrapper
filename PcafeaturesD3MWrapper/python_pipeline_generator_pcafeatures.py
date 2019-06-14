@@ -51,9 +51,6 @@ pipeline_description.add_step(step_5)
 # Final Output
 pipeline_description.add_output(name='output predictions', data_reference='steps.5.produce')
 
-# Final Output
-pipeline_description.add_output(name='output predictions', data_reference='steps.5.produce')
-
 # Output json pipeline
 blob = pipeline_description.to_json()
 filename = blob[8:44] + '.json'

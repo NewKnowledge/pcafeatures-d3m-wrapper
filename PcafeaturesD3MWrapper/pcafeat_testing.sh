@@ -6,8 +6,9 @@ git checkout simon_pipelines
 #git pull upstream master
 
 Datasets=('1491_one_hundred_plants_margin' 'LL0_1100_popularkids')
-cd /primitives/v2019.6.7/Distil/d3m.primitives.feature_selection.pca_features.Pcafeatures/1.2.1/pipelines
-mkdir test_pipeline
+rm /primitives/v2019.6.7/Distil/d3m.primitives.feature_selection.pca_features.Pcafeatures/3.0.2/pipelines/test_pipeline/*
+cd /primitives/v2019.6.7/Distil/d3m.primitives.feature_selection.pca_features.Pcafeatures/3.0.2/pipelines
+#mkdir test_pipeline
 cd test_pipeline
 
 # create text file to record scores and timing information
