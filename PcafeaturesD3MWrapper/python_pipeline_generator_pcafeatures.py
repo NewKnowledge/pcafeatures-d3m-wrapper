@@ -3,7 +3,7 @@ from d3m.metadata.base import ArgumentType, Context
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 
 # Creating pipeline
-pipeline_description = Pipeline(context=Context.TESTING)
+pipeline_description = Pipeline()
 pipeline_description.add_input(name='inputs')
 
 # Step 1: dataset_to_dataframe
@@ -51,6 +51,20 @@ pipeline_description.add_step(step_5)
 # Final Output
 pipeline_description.add_output(name='output predictions', data_reference='steps.5.produce')
 
-# Output to JSON
-with open('pipeline.json', 'w') as outfile:
-    outfile.write(pipeline_description.to_json())
+# Output json pipeline
+blob = pipeline_description.to_json()
+filename = blob[8:44] + '.json'
+with open(filename, 'w') as outfile:
+    outfile.write(blob)
+
+# output dataset metafile (from command line argument)
+metafile = blob[8:44] + '.meta'
+dataset = sys.argv[1]
+with open(metafile, 'w') as outfile:
+    outfile.write('{')
+    outfile.write(f'"problem": "{dataset}_problem",')
+    outfile.write(f'"full_inputs": ["{dataset}_dataset"],')
+    outfile.write(f'"train_inputs": ["{dataset}_dataset_TRAIN"],')
+    outfile.write(f'"test_inputs": ["{dataset}_dataset_TEST"],')
+    outfile.write(f'"score_inputs": ["{dataset}_dataset_SCORE"]')
+    outfile.write('}')
