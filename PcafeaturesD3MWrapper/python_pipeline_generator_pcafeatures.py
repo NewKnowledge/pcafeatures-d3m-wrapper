@@ -16,6 +16,7 @@ pipeline_description.add_step(step_0)
 step_1 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.feature_selection.pca_features.Pcafeatures'))
 step_1.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
 step_1.add_output('produce')
+step_1.add_hyperparameter(name='threshold', argument_type=ArgumentType.VALUE,data=0.0)
 pipeline_description.add_step(step_1)
 
 # Step 3: column_parser
@@ -33,12 +34,11 @@ step_3.add_hyperparameter(name='use_semantic_types', argument_type=ArgumentType.
 pipeline_description.add_step(step_3)
 
 # Step 5: random_forest
-step_4 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.classification.random_forest.SKlearn'))
+step_4 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.classification.xgboost_gbtree.DataFrameCommon'))
 step_4.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
 step_4.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
 step_4.add_output('produce')
 step_4.add_hyperparameter(name='add_index_columns', argument_type=ArgumentType.VALUE,data=True)
-step_4.add_hyperparameter(name='use_semantic_types', argument_type=ArgumentType.VALUE,data=True)
 pipeline_description.add_step(step_4)
 
 # Step 6: construct output
