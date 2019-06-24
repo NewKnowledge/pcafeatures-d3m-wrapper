@@ -3,7 +3,7 @@ import pandas
 
 from punk.feature_selection import PCAFeatures
 from d3m.primitive_interfaces.transformer import TransformerPrimitiveBase
-from d3m.primitive_interfaces.base import CallResult
+from d3m.primitive_interfaces.base import PrimitiveBase, CallResult
 from d3m.primitives.data_transformation.extract_columns import DataFrameCommon as ExtractColumns
 
 
@@ -19,6 +19,9 @@ __contact__ = 'mailto:nklabs@newknowledge.com'
 Inputs = container.pandas.DataFrame
 Outputs = container.pandas.DataFrame
 
+class Params(params.Params):
+    pass
+
 class Hyperparams(hyperparams.Hyperparams):
     threshold = hyperparams.Uniform(lower = 0.0, upper = 1.0, default = 0.0, 
         upper_inclusive = False, semantic_types = [
@@ -33,8 +36,7 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         Perform principal component analysis on all numeric data in the dataset
         and then use each original features contribution to the first principal
         component as a proxy for the 'score' of that feature. Returns a dataframe
-        containing an ordered list of all original features as well as their 
-        contribution to the first principal component.
+        that only contains features whose score is above a threshold (HP)
     """
     metadata = metadata_base.PrimitiveMetadata({
         # Simply an UUID generated once and fixed forever. Generated using "uuid.uuid4()".
@@ -74,6 +76,61 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     
     def __init__(self, *, hyperparams: Hyperparams, random_seed: int = 0)-> None:
         super().__init__(hyperparams=hyperparams, random_seed=random_seed)
+        self.pca_df = None
+    
+    def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
+        '''
+        fits pcafeatures feature selection algorithm on the training set. applies same feature selection to test set
+        for consistency with downstream classifiers
+        '''
+        # take best features with threshold
+        bestFeatures = [int(row[1]) for row in self.pca_df.itertuples() if float(row[2]) > self.hyperparams['threshold']]
+
+        # add suggested targets to dataset containing best features
+        self.bestFeatures = [inputs_cols[bf] for bf in bestFeatures]
+
+        bestFeatures += inputs_target
+
+        # drop all columns below threshold value 
+        extract_client = ExtractColumns(hyperparams={"columns":bestFeatures})
+        result = extract_client.produce(inputs=inputs)
+        return result
+
+    def get_params(self) -> Params:
+        return self._params
+
+    def set_params(self, *, params: Params) -> None:
+        self.params = params
+    
+    def set_training_data(self, *, inputs: Inputs, outputs: Outputs) -> None:
+        '''
+        Sets primitive's training data
+
+        Parameters
+        ----------
+        inputs = D3M dataframe
+        
+        '''
+        # remove primary key and targets from feature selection
+        inputs_primary_key = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/PrimaryKey')
+        inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/SuggestedTarget')
+        if not len(inputs_target):
+            inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/Target') 
+        if not len(inputs_target):
+            inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/TrueTarget')
+
+        # extract numeric columns and suggested target
+        if self.hyperparams['only_numeric_cols']:
+            inputs_float = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Float')
+            inputs_integer = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Integer')
+            inputs_numeric = [*inputs_float, *inputs_integer]
+            inputs_cols = [x for x in inputs_numeric if x not in inputs_primary_key]
+        else:
+            inputs_cols = [x for x in inputs if x not in inputs_primary_key]
+        
+        # generate feature ranking
+        self.pca_df = PCAFeatures().rank_features(inputs = inputs.iloc[:, inputs_cols])
+
         
     def produce_metafeatures(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
         """
@@ -124,7 +181,7 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
             inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/Target') 
         if not len(inputs_target):
             inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/TrueTarget')
-
+        
         # extract numeric columns and suggested target
         if self.hyperparams['only_numeric_cols']:
             inputs_float = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Float')
@@ -134,15 +191,8 @@ class pcafeatures(TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         else:
             inputs_cols = [x for x in inputs if x not in inputs_primary_key]
 
-        # generate feature ranking
-        pca_df = PCAFeatures().rank_features(inputs = inputs.iloc[:, inputs_cols])
-
-        # take best features with threshold
-        bestFeatures = [int(row[1]) for row in pca_df.itertuples() if float(row[2]) > self.hyperparams['threshold']]
-
         # add suggested targets to dataset containing best features
-        bestFeatures = [inputs_cols[bf] for bf in bestFeatures]
-        bestFeatures += inputs_target
+        bestFeatures += self.bestFeatures + inputs_target
 
         # drop all columns below threshold value 
         extract_client = ExtractColumns(hyperparams={"columns":bestFeatures})
