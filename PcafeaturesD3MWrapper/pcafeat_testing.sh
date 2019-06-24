@@ -1,37 +1,22 @@
 #!/bin/bash -e 
 
-cd /primitives
-git checkout simon_pipelines
+#cd /primitives
+#git checkout simon_pipelines
 #git remote add upstream https://gitlab.com/datadrivendiscovery/primitives
 #git pull upstream master
 
-Datasets=('1491_one_hundred_plants_margin' 'LL0_1100_popularkids')
-rm /primitives/v2019.6.7/Distil/d3m.primitives.feature_selection.pca_features.Pcafeatures/3.0.2/pipelines/test_pipeline/*
-cd /primitives/v2019.6.7/Distil/d3m.primitives.feature_selection.pca_features.Pcafeatures/3.0.2/pipelines
+Datasets=('LL0_1100_popularkids')
+#rm /primitives/v2019.6.7/Distil/d3m.primitives.feature_selection.pca_features.Pcafeatures/3.0.2/pipelines/test_pipeline/*
+#cd /primitives/v2019.6.7/Distil/d3m.primitives.feature_selection.pca_features.Pcafeatures/3.0.2/pipelines
 #mkdir test_pipeline
-#mkdir experiments
-#cd test_pipeline
 # create text file to record scores and timing information
 #touch scores.txt
 #echo "DATASET, F1 SCORE, EXECUTION TIME" >> scores.txt
-#cd /primitives/v2019.6.7/Distil/d3m.primitives.feature_selection.rffeatures.Rffeatures/3.1.1/pipelines
-#mkdir test_pipeline
-#mkdir experiments
-#cd test_pipeline
-# create text file to record scores and timing information
-#touch scores.txt
-#echo "DATASET, F1 SCORE, EXECUTION TIME" >> scores.txt
+cd test_pipeline
 
 match="step_1.add_output('produce')"
-insert="Temporary Line threshold"
-file="/src/pcafeaturesd3mwrapper/PcafeaturesD3MWrapper/python_pipeline_generator_pcafeatures.py"
-sed -i "s/$match/$match\n$insert/" $file
-#insert="Temporary Line num_features"
-#file="/src/rffeaturesd3mwrapper/RffeaturesD3MWrapper/python_pipeline_generator_rffeatures.py"
-#sed -i "s/$match/$match\n$insert/" $file
 
 for i in "${Datasets[@]}"; do
-  cd /primitives/v2019.6.7/Distil/d3m.primitives.feature_selection.pca_features.Pcafeatures/3.0.2/pipelines/test_pipeline
   best_score=0
   for n in $(seq 0 0.1 0.95); do
     file="/src/pcafeaturesd3mwrapper/PcafeaturesD3MWrapper/python_pipeline_generator_pcafeatures.py"
@@ -54,12 +39,9 @@ for i in "${Datasets[@]}"; do
       echo "$score"
       echo "$best_score"
       if [[ $score > $best_score ]]; then
-        echo "$i, $score, $runtime" >> scores.txt
+        echo "$i, $score, $runtime" >> ../scores.txt
         best_score=$score
         echo "$best_score"
-        rm ../experiments/*
-        cp *.meta ../experiments/
-        cp *.json ../experiments/
        fi
     fi
   
