@@ -122,7 +122,7 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
             inputs_numeric = [*inputs_float, *inputs_integer]
             self.inputs_cols = [x for x in inputs_numeric if x not in inputs_primary_key]
         else:
-            self.inputs_cols = [x for x in inputs if x not in inputs_primary_key]
+            self.inputs_cols = [x for x in range(inputs.shape[1]) if x not in inputs_primary_key and x not in inputs_target]
         
         # generate feature ranking
         self.pca_df = PCAFeatures().rank_features(inputs = inputs.iloc[:, self.inputs_cols])
