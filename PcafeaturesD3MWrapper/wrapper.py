@@ -25,10 +25,10 @@ class Params(params.Params):
 class Hyperparams(hyperparams.Hyperparams):
     threshold = hyperparams.Uniform(lower = 0.0, upper = 1.0, default = 0.0, 
         upper_inclusive = False, semantic_types = [
-       'https://metadata.datadrivendiscovery.org/types/ControlParameter'], 
+       'https://metadata.datadrivendiscovery.org/types/TuningParameter'], 
        description = 'pca score threshold for feature selection')
     only_numeric_cols = hyperparams.UniformBool(default = True, semantic_types = [
-       'https://metadata.datadrivendiscovery.org/types/ControlParameter'],
+       'https://metadata.datadrivendiscovery.org/types/TuningParameter'],
        description="consider only numeric columns for feature selection")
 
 class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
