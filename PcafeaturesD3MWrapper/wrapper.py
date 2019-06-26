@@ -25,10 +25,10 @@ class Params(params.Params):
 class Hyperparams(hyperparams.Hyperparams):
     threshold = hyperparams.Uniform(lower = 0.0, upper = 1.0, default = 0.0, 
         upper_inclusive = False, semantic_types = [
-       'https://metadata.datadrivendiscovery.org/types/ControlParameter'], 
+       'https://metadata.datadrivendiscovery.org/types/TuningParameter'], 
        description = 'pca score threshold for feature selection')
     only_numeric_cols = hyperparams.UniformBool(default = True, semantic_types = [
-       'https://metadata.datadrivendiscovery.org/types/ControlParameter'],
+       'https://metadata.datadrivendiscovery.org/types/TuningParameter'],
        description="consider only numeric columns for feature selection")
 
 class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
@@ -120,9 +120,9 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
             inputs_float = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Float')
             inputs_integer = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Integer')
             inputs_numeric = [*inputs_float, *inputs_integer]
-            self.inputs_cols = [x for x in inputs_numeric if x not in inputs_primary_key]
+            self.inputs_cols = [x for x in inputs_numeric if x not in inputs_primary_key and x not in inputs_target]
         else:
-            self.inputs_cols = [x for x in inputs if x not in inputs_primary_key]
+            self.inputs_cols = [x for x in range(inputs.shape[1]) if x not in inputs_primary_key and x not in inputs_target]
         
         # generate feature ranking
         self.pca_df = PCAFeatures().rank_features(inputs = inputs.iloc[:, self.inputs_cols])
