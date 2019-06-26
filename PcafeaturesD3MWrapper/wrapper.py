@@ -120,7 +120,7 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
             inputs_float = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Float')
             inputs_integer = inputs.metadata.get_columns_with_semantic_type('http://schema.org/Integer')
             inputs_numeric = [*inputs_float, *inputs_integer]
-            self.inputs_cols = [x for x in inputs_numeric if x not in inputs_primary_key]
+            self.inputs_cols = [x for x in inputs_numeric if x not in inputs_primary_key and x not in inputs_target]
         else:
             self.inputs_cols = [x for x in range(inputs.shape[1]) if x not in inputs_primary_key and x not in inputs_target]
         
