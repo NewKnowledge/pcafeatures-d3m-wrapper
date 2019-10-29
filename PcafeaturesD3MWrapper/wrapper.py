@@ -4,7 +4,7 @@ import sys
 from punk.feature_selection import PCAFeatures
 from d3m.primitive_interfaces.transformer import TransformerPrimitiveBase
 from d3m.primitive_interfaces.base import PrimitiveBase, CallResult
-from d3m.primitives.data_transformation.extract_columns import DataFrameCommon as ExtractColumns
+from d3m.primitives.data_transformation.extract_columns import Common as ExtractColumns
 
 
 from d3m import container, utils
@@ -23,9 +23,9 @@ class Params(params.Params):
     pass
 
 class Hyperparams(hyperparams.Hyperparams):
-    threshold = hyperparams.Uniform(lower = 0.0, upper = 1.0, default = 0.0, 
+    threshold = hyperparams.Uniform(lower = 0.0, upper = 1.0, default = 0.0,
         upper_inclusive = False, semantic_types = [
-       'https://metadata.datadrivendiscovery.org/types/TuningParameter'], 
+       'https://metadata.datadrivendiscovery.org/types/TuningParameter'],
        description = 'pca score threshold for feature selection')
     only_numeric_cols = hyperparams.UniformBool(default = True, semantic_types = [
        'https://metadata.datadrivendiscovery.org/types/TuningParameter'],
@@ -73,12 +73,12 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
         'primitive_family': metadata_base.PrimitiveFamily.FEATURE_SELECTION,
 
     })
-    
+
     def __init__(self, *, hyperparams: Hyperparams, random_seed: int = 0)-> None:
         super().__init__(hyperparams=hyperparams, random_seed=random_seed)
         self.pca_df = None
         self.input_cols = None
-        self.bestFeatures = None        
+        self.bestFeatures = None
 
     def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
         '''
@@ -97,7 +97,7 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
 
     def set_params(self, *, params: Params) -> None:
         self.params = params
-    
+
     def set_training_data(self, *, inputs: Inputs, outputs: Outputs) -> None:
         '''
         Sets primitive's training data
@@ -105,13 +105,13 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
         Parameters
         ----------
         inputs = D3M dataframe
-        
+
         '''
         # remove primary key and targets from feature selection
         inputs_primary_key = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/PrimaryKey')
         inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/SuggestedTarget')
         if not len(inputs_target):
-            inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/Target') 
+            inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/Target')
         if not len(inputs_target):
             inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/TrueTarget')
 
@@ -123,11 +123,11 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
             self.inputs_cols = [x for x in inputs_numeric if x not in inputs_primary_key and x not in inputs_target]
         else:
             self.inputs_cols = [x for x in range(inputs.shape[1]) if x not in inputs_primary_key and x not in inputs_target]
-        
+
         # generate feature ranking
         self.pca_df = PCAFeatures().rank_features(inputs = inputs.iloc[:, self.inputs_cols])
 
-        
+
     def produce_metafeatures(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
         """
         Parameters
@@ -171,11 +171,11 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
             the second column.
         """
         inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/SuggestedTarget')
-        
+
         # add suggested targets to dataset containing best features
         bestFeatures = self.bestFeatures + inputs_target
-         
-        # drop all columns below threshold value 
+
+        # drop all columns below threshold value
         extract_client = ExtractColumns(hyperparams={"columns":bestFeatures})
         result = extract_client.produce(inputs=inputs)
         return result
