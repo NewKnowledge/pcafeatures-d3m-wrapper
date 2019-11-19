@@ -1,3 +1,0 @@
-[d3m.primitives]
-feature_selection.pca_features.Pcafeatures = PcafeaturesD3MWrapper:pcafeatures
-

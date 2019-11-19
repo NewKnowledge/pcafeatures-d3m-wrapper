@@ -1,3 +1,0 @@
-numpy
-pandas==0.25.2
-punk==3.0.0
