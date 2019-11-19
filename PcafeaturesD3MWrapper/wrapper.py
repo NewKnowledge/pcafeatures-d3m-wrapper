@@ -4,17 +4,14 @@ import sys
 from punk.feature_selection import PCAFeatures
 from d3m.primitive_interfaces.transformer import TransformerPrimitiveBase
 from d3m.primitive_interfaces.base import PrimitiveBase, CallResult
-from d3m.primitives.data_transformation.extract_columns import Common as ExtractColumns
-
 
 from d3m import container, utils
 from d3m.container import DataFrame as d3m_DataFrame
 from d3m.metadata import hyperparams, base as metadata_base, params
-from common_primitives import utils as utils_cp, dataset_to_dataframe as DatasetToDataFrame
 
 __author__ = 'Distil'
-__version__ = '3.0.2'
-__contact__ = 'mailto:nklabs@newknowledge.com'
+__version__ = '3.1.2'
+__contact__ = 'mailto:numa@yonder.co'
 
 Inputs = container.pandas.DataFrame
 Outputs = container.pandas.DataFrame
@@ -176,17 +173,5 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
         bestFeatures = self.bestFeatures + inputs_target
 
         # drop all columns below threshold value
-        # extract_client = ExtractColumns(hyperparams={"columns":bestFeatures})
         result = inputs.select_columns(bestFeatures)
         return CallResult(result)
-
-
-if __name__ == '__main__':
-    # LOAD DATA AND PREPROCESSING
-    input_dataset = container.Dataset.load('file:///datasets/seed_datasets_current/38_sick/38_sick_dataset/datasetDoc.json')
-    ds2df_client = DatasetToDataFrame.DatasetToDataFramePrimitive(hyperparams={"dataframe_resource":"learningData"})
-    df = d3m_DataFrame(ds2df_client.produce(inputs=input_dataset).value)
-    hyperparams_class = pcafeatures.metadata.query()['primitive_code']['class_type_arguments']['Hyperparams']
-    client = pcafeatures(hyperparams=hyperparams_class.defaults())
-    result = client.produce(inputs = df)
-    print(result.value)
