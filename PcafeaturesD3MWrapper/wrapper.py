@@ -176,9 +176,9 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
         bestFeatures = self.bestFeatures + inputs_target
 
         # drop all columns below threshold value
-        extract_client = ExtractColumns(hyperparams={"columns":bestFeatures})
-        result = extract_client.produce(inputs=inputs)
-        return result
+        # extract_client = ExtractColumns(hyperparams={"columns":bestFeatures})
+        result = inputs.select_columns(bestFeatures)
+        return CallResult(result)
 
 
 if __name__ == '__main__':
