@@ -167,10 +167,11 @@ class pcafeatures(PrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
             by their contribution to the first principal component, and scores in
             the second column.
         """
-        inputs_target = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/SuggestedTarget')
 
-        # add suggested targets to dataset containing best features
-        bestFeatures = self.bestFeatures + inputs_target
+        index = inputs.metadata.get_columns_with_semantic_type('https://metadata.datadrivendiscovery.org/types/PrimaryKey')
+        
+        # add index to dataset containing best features (suggested targets added at a later pipeline step)
+        bestFeatures = index + self.bestFeatures
 
         # drop all columns below threshold value
         result = inputs.select_columns(bestFeatures)
